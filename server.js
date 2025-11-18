@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import helmet from "helmet";
 import compression from "compression";
-import { fileURLToPath } from "url";
 
 /* ────────────────────────────────────────────
    IMPORT ROUTES
@@ -45,7 +44,7 @@ app.use(
 app.use(compression());
 
 /* ────────────────────────────────────────────
-   CORS (รองรับ Cloudflare Tunnel)
+   CORS
 ───────────────────────────────────────────── */
 app.use(
   cors({
@@ -89,7 +88,7 @@ uploadFolders.forEach((folder) => {
   if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
 });
 
-/* 🟢 ให้ static files ทำงานแบบมั่นคงที่สุด */
+/* Static uploads */
 app.use(
   "/uploads",
   express.static(uploadRoot, {
@@ -116,35 +115,10 @@ app.use("/api/ita", itaRouter);
 app.use("/api/links", linksRouter);
 
 /* ────────────────────────────────────────────
-   FRONTEND (Vite Build)
-───────────────────────────────────────────── */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const distPath = path.join(__dirname, "../frontend-app/dist");
-
-app.use(
-  express.static(distPath, {
-    setHeaders(res, filePath) {
-      if (filePath.endsWith(".html")) {
-        res.setHeader("Cache-Control", "no-cache");
-      } else {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      }
-    },
-  })
-);
-
-/* SPA fallback */
-app.get("*", (req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
-
-/* ────────────────────────────────────────────
    START SERVER
 ───────────────────────────────────────────── */
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || "0.0.0.0";
 
-app.listen(PORT, HOST, () => {
-  console.log(`✅ Server running at http://${HOST}:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
